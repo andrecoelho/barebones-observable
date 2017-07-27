@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>RxJS</title>
+    <script src="observable.js"></script>
+    <style type="text/css">
+      body {
+        margin: 40px 0 0 170px;
+      }
+
+      #logo {
+        position: fixed;
+        text-align: right;
+        top: 0;
+        left: 0;
+        cursor: move;
+        background-color: black;
+        background-image: url("logo.png");
+        width: 150px;
+        height: 150px;
+        color: white;
+      }
+
+      #button {
+        width: 100px;
+        height: 50px;
+        outline: none;
+      }
+
+      #line {
+        position: fixed;
+        top: 0;
+        left: 218px;
+        bottom: 0;
+        width: 0;
+        border-left: 1px solid red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="logo">Drag me!</div>
+    <button id="button">Click Me!</button>
+    <div id="line"></div>
+    <script>
+      // =======================================================================
+      // Button
+      const button = document.getElementById('button');
+
+      const clickStream = Observable
+        .fromEvent(button, 'click')
+        .filter(event => event.clientX > 218)
+        .map(event => `${event.clientX}px`)
+        .take(5);
+
+      const clickSubscription = clickStream.forEach(
+        key => console.log(key),
+        null,
+        () => {
+          button.innerText = 'Enough clicking!';
+          button.disabled = true;
+        }
+      );
+
+      // let counter = 0;
+
+      // button.addEventListener('click', function handler(event) {
+      //   if (event.clientX > 190) {
+      //     counter++;
+      //     console.log(`${event.clientX}px`);
+
+      //     if (counter >= 5) {
+      //       button.innerText = 'Enough clicking!';
+      //       button.disabled = true;
+      //       button.removeEventListener('click', handler);
+      //     }
+      //   }
+      // });
+
+      // =======================================================================
+      // Logo
+      const logo = document.getElementById('logo');
+
+      const mouseDown = Observable.fromEvent(logo, 'mousedown');
+      const mouseUp = Observable.fromEvent(logo, 'mouseup');
+      const mouseMove = Observable.fromEvent(document, 'mousemove');
+
+      const mouseDrag = mouseDown.flatMap(mouseDownEvent => {
+        return mouseMove
+          .map(mouseMoveEvent => {
+            mouseMoveEvent.preventDefault();
+
+            return {
+              top: mouseMoveEvent.clientY - mouseDownEvent.offsetY,
+              left: mouseMoveEvent.clientX - mouseDownEvent.offsetX
+            }
+          })
+          .takeUntil(mouseUp);
+      });
+
+      mouseDrag.forEach(position => {
+        logo.style.top = `${position.top}px`;
+        logo.style.left = `${position.left}px`;
+      });
+
+      // logo.addEventListener('mousedown', downEvent => {
+      //   const moveHandler = moveEvent => {
+      //     moveEvent.preventDefault();
+
+      //     logo.style.top = `${moveEvent.clientY - downEvent.offsetY}px`;
+      //     logo.style.left = `${moveEvent.clientX - downEvent.offsetX}px`;
+      //   }
+
+      //   document.addEventListener('mousemove', moveHandler);
+
+      //   logo.addEventListener('mouseup', function upHandler() {
+      //     document.removeEventListener('mousemove', moveHandler);
+      //     logo.removeEventListener('mouseup', upHandler);
+      //   });
+      // });
+    </script>
+  </body>
+</html>
