@@ -15,23 +15,9 @@ class Observable {
     }
   }
 
-  map(projectionFn) {
-    const source = this;
-
-    return new Observable(observer =>
-      source.forEach(
-        value => observer.onNext(projectionFn(value)),
-        observer.onError,
-        observer.onCompleted
-      )
-    );
-  }
-
   filter(predicateFn) {
-    const source = this;
-
     return new Observable(observer =>
-      source.forEach(
+      this.forEach(
         value => {
           if (predicateFn(value)) {
             observer.onNext(value);
@@ -43,13 +29,21 @@ class Observable {
     );
   }
 
-  take(count) {
-    const source = this;
+  map(projectionFn) {
+    return new Observable(observer =>
+      this.forEach(
+        value => observer.onNext(projectionFn(value)),
+        observer.onError,
+        observer.onCompleted
+      )
+    );
+  }
 
+  take(count) {
     return new Observable(observer => {
       let counter = 0;
 
-      const subscription = source.forEach(
+      const subscription = this.forEach(
         value => {
           counter++;
           observer.onNext(value);
@@ -68,25 +62,23 @@ class Observable {
   }
 
   takeUntil(notifier) {
-    const source = this;
-
     return new Observable(observer => {
-      const sourceSubscription = source.forEach(observer);
+      const subscription = this.forEach(observer);
 
       const notifierSubscription = notifier.forEach(
         () => {
-          sourceSubscription.dispose();
+          subscription.dispose();
           notifierSubscription.dispose();
           observer.onCompleted();
         },
         observer.onError,
         () => {
-          sourceSubscription.dispose();
+          subscription.dispose();
           observer.onCompleted();
         }
       );
 
-      return sourceSubscription;
+      return subscription;
     });
   }
 
@@ -117,7 +109,7 @@ class Observable {
       const timerId = setInterval(observer.onNext, milliseconds);
 
       return {
-        dispose: () => {
+        dispose() {
           clearInterval(timerId);
         }
       };
