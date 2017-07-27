@@ -90,30 +90,12 @@ class Observable {
     });
   }
 
-  flatMap(projectionFn) {
-    const source = this;
-
+  flatMap(projection) {
     return new Observable(observer => {
-      let innerSubscription;
-
-      return source.forEach(
-        value => {
-          const innerObservable = projectionFn(value);
-
-          if (innerSubscription) {
-            innerSubscription.dispose();
-          }
-
-          innerSubscription = innerObservable.forEach(observer);
-        },
+      return this.forEach(
+        value => projection(value).forEach(observer),
         observer.onError,
-        () => {
-          if (innerSubscription) {
-            innerSubscription.dispose();
-          }
-
-          observer.onCompleted();
-        }
+        observer.onCompleted
       );
     });
   }
