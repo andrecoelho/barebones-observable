@@ -132,9 +132,7 @@ class Observable {
 
   static fromInterval(milliseconds) {
     return new Observable(observer => {
-      const timerId = setInterval(() => {
-        observer.onNext();
-      }, milliseconds);
+      const timerId = setInterval(observer.onNext, milliseconds);
 
       return {
         dispose: () => {
