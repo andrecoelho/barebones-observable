@@ -1,17 +1,18 @@
+// eslint-disable-next-line no-unused-vars
 class Observable {
   constructor(forEach) {
     this._forEach = forEach;
   }
 
-  forEach(onNext, onError, onCompleted) {
-    if (typeof onNext === "function") {
+  forEach(next, error, complete) {
+    if (typeof next === 'function') {
       return this._forEach({
-        onNext,
-        onError: onError || function() {},
-        onCompleted: onCompleted || function() {}
+        next,
+        error: error || function() {},
+        complete: complete || function() {}
       });
     } else {
-      return this._forEach(onNext);
+      return this._forEach(next);
     }
   }
 
@@ -20,11 +21,11 @@ class Observable {
       this.forEach(
         value => {
           if (predicateFn(value)) {
-            observer.onNext(value);
+            observer.next(value);
           }
         },
-        observer.onError,
-        observer.onCompleted
+        observer.error,
+        observer.complete
       )
     );
   }
@@ -32,9 +33,9 @@ class Observable {
   map(projectionFn) {
     return new Observable(observer =>
       this.forEach(
-        value => observer.onNext(projectionFn(value)),
-        observer.onError,
-        observer.onCompleted
+        value => observer.next(projectionFn(value)),
+        observer.error,
+        observer.complete
       )
     );
   }
@@ -46,15 +47,15 @@ class Observable {
       const subscription = this.forEach(
         value => {
           counter++;
-          observer.onNext(value);
+          observer.next(value);
 
           if (counter >= count) {
             subscription.dispose();
-            observer.onCompleted();
+            observer.complete();
           }
         },
-        observer.onError,
-        observer.onCompleted
+        observer.error,
+        observer.complete
       );
 
       return subscription;
@@ -69,12 +70,12 @@ class Observable {
         () => {
           subscription.dispose();
           notifierSubscription.dispose();
-          observer.onCompleted();
+          observer.complete();
         },
-        observer.onError,
+        observer.error,
         () => {
           subscription.dispose();
-          observer.onCompleted();
+          observer.complete();
         }
       );
 
@@ -82,23 +83,23 @@ class Observable {
     });
   }
 
-  flatMap(projection) {
+  mergeMap(projection) {
     return new Observable(observer => {
       return this.forEach(
         value => projection(value).forEach(observer),
-        observer.onError,
-        observer.onCompleted
+        observer.error,
+        observer.complete
       );
     });
   }
 
   static fromEvent(domEl, eventName) {
     return new Observable(observer => {
-      domEl.addEventListener(eventName, observer.onNext);
+      domEl.addEventListener(eventName, observer.next);
 
       return {
         dispose() {
-          domEl.removeEventListener(eventName, observer.onNext);
+          domEl.removeEventListener(eventName, observer.next);
         }
       };
     });
@@ -106,7 +107,7 @@ class Observable {
 
   static fromInterval(milliseconds) {
     return new Observable(observer => {
-      const timerId = setInterval(observer.onNext, milliseconds);
+      const timerId = setInterval(observer.next, milliseconds);
 
       return {
         dispose() {
