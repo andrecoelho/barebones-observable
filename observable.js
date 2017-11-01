@@ -67,17 +67,16 @@ class Observable {
       const subscription = this.forEach(observer);
 
       const notifierSubscription = notifier.forEach(
-        () => {
-          subscription.dispose();
-          notifierSubscription.dispose();
-          observer.complete();
-        },
-        observer.error,
-        () => {
-          subscription.dispose();
-          observer.complete();
-        }
+        terminate,
+        terminate,
+        terminate
       );
+
+      function terminate() {
+        observer.complete();
+        notifierSubscription.dispose();
+        subscription.dispose();
+      }
 
       return subscription;
     });
