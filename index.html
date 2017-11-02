@@ -90,14 +90,10 @@
 
     const mouseDrag = mouseDown.mergeMap(mouseDownEvent =>
       mouseMove
-        .map(mouseMoveEvent => {
-          mouseMoveEvent.preventDefault();
-
-          return {
-            top: mouseMoveEvent.clientY - mouseDownEvent.offsetY,
-            left: mouseMoveEvent.clientX - mouseDownEvent.offsetX
-          }
-        })
+        .map(mouseMoveEvent => ({
+          top: mouseMoveEvent.clientY - mouseDownEvent.offsetY,
+          left: mouseMoveEvent.clientX - mouseDownEvent.offsetX
+        }))
         .takeUntil(mouseUp)
     );
 
@@ -108,8 +104,6 @@
 
     // logo.addEventListener('mousedown', downEvent => {
     //   const moveHandler = moveEvent => {
-    //     moveEvent.preventDefault();
-
     //     logo.style.top = `${moveEvent.clientY - downEvent.offsetY}px`;
     //     logo.style.left = `${moveEvent.clientX - downEvent.offsetX}px`;
     //   }
